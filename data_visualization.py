@@ -1,9 +1,18 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import data_preprocessing as loader
 
 data = pd.read_csv("datasets/trainingset.csv")
 
+
+def load_data(raw_data):
+    data = loader.load(raw_data)
+    print("loaded preprocessed data")
+    return data
+
+
+# data = load_data("datasets/trainingset.csv")
 
 def line_plot(x, y):
     data_sorted = data.sort_values(x)
@@ -69,4 +78,3 @@ for i in range(data.shape[1]):
         histogram(i)
         if i != 19:
             scatter_plot(i, 19)
-
