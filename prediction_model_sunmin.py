@@ -3,6 +3,7 @@ import pandas as pd
 from create_submission_csv import create_submission
 from data_preprocessing import load
 from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import StandardScaler
 
 
 boolean_answers = pd.read_csv("datasets/trainingset_boolean_claim_amount.csv").loc[:, "ClaimAmount"]
@@ -29,14 +30,16 @@ class TestModelLinearRegression:
         lin_reg = LinearRegression()
         boolean_data = pd.read_csv("datasets/trainingset_boolean_claim_amount.csv")
         boolean_features = boolean_data.drop("ClaimAmount", axis=1, inplace=False)
+        boolean_features.loc[:, continuous] = StandardScaler().fit_transform(boolean_features.loc[:, continuous])
         boolean_labels = boolean_data.loc[:, "ClaimAmount"]
         self.claim_or_not_model = lin_reg.fit(boolean_features, boolean_labels)
 
         lin_reg_2 = LinearRegression()
-        continuous_data = pd.read_csv("datasets/trainingset_claim_amounts_only.csv")
-        continuous_features = continuous_data.drop("ClaimAmount", axis=1, inplace=False)
-        continuous_labels = continuous_data.loc[:, "ClaimAmount"]
-        self.claim_amount_model = lin_reg_2.fit(continuous_features, continuous_labels)
+        claim_amount_data = pd.read_csv("datasets/trainingset_claim_amounts_only.csv")
+        claim_amount_features = claim_amount_data.drop("ClaimAmount", axis=1, inplace=False)
+        claim_amount_features.loc[:, continuous] = StandardScaler().fit_transform(claim_amount_features.loc[:, continuous])
+        claim_amount_labels = claim_amount_data.loc[:, "ClaimAmount"]
+        self.claim_amount_model = lin_reg_2.fit(claim_amount_features, claim_amount_labels)
 
         # For getting the stats for check_claim_amount_mae
         self.predict(
@@ -45,6 +48,7 @@ class TestModelLinearRegression:
         self.predict(pd.read_csv("datasets/trainingset.csv").drop("ClaimAmount", axis=1, inplace=False))
 
     def predict(self, features):
+        features.loc[:, continuous] = StandardScaler().fit_transform(features.loc[:, continuous])
         predictions_claim_or_not_raw = self.claim_or_not_model.predict(features)
         predictions_claim_or_not = [0] * len(features)
         for i in range(len(features)):
@@ -110,5 +114,8 @@ check_overall_mae(np.zeros(len(all_data_answers)))
 create_submission(TestModelZeroes, 1, 1, False)
 
 print("***** LINEAR REGRESSION *****")
-model = TestModelLinearRegression(0.1)
-create_submission(model, 1, 2, True)
+lin_reg_model = TestModelLinearRegression(0.1)
+create_submission(lin_reg_model, 1, 2, True)
+
+# Decision tree for the boolean part?
+
