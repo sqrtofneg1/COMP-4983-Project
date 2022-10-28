@@ -8,7 +8,11 @@ from sklearn.linear_model import LinearRegression
 boolean_answers = pd.read_csv("datasets/trainingset_boolean_claim_amount.csv").loc[:, "ClaimAmount"]
 num_expected_claim_amounts = 3335
 claim_amounts_answers = pd.read_csv("datasets/trainingset_claim_amounts_only.csv").loc[:, "ClaimAmount"]
-all_data_answers = pd.read_csv("datasets/trainingset.csv").loc[:, "ClaimAmount"]
+all_data = pd.read_csv("datasets/trainingset.csv")
+all_data_answers = all_data.loc[:, "ClaimAmount"]
+categorical = ["feature3", "feature4", "feature5", "feature7", "feature9", "feature11",
+               "feature13", "feature14", "feature15", "feature16", "feature18"]
+continuous = ["feature1", "feature2", "feature6", "feature8", "feature10", "feature12", "feature17"]
 
 
 class TestModelZeroes:
