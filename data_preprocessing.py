@@ -14,9 +14,13 @@ def load(filepath):
     for column in unencoded:
         if unencoded[column].nunique() <= 20 or unencoded[column].dtypes == object:
             categorical.append(column)
+    try:
+        categorical.remove("ClaimAmount")
+    except:
+        pass
 
     trans_data = pd.get_dummies(unencoded, columns=categorical)
-
+    print(trans_data)
     sorted_columns = []
     column_order = {}
 
@@ -30,9 +34,11 @@ def load(filepath):
                     column_order.update({c: index})
 
     sorted_dict = sorted(column_order.items(), key=lambda x: x[1])
+    # print(sorted_dict)
     for item in sorted_dict:
         sorted_columns.append(item[0])
 
     data = trans_data.reindex(sorted_columns, axis=1)
+    # print(data.columns)
 
     return data
