@@ -20,7 +20,7 @@ def load(filepath):
         pass
 
     trans_data = pd.get_dummies(unencoded, columns=categorical)
-    print(trans_data)
+    # print(trans_data)
     sorted_columns = []
     column_order = {}
 

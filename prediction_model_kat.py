@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 from create_submission_csv import create_submission
 from data_preprocessing import load
-from sklearn.linear_model import LinearRegression
+from sklearn.exceptions import ConvergenceWarning
+from sklearn.utils._testing import ignore_warnings
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import Ridge, Lasso
 
@@ -23,6 +24,7 @@ class TestModelZeroes:
 class CrossValidation:
 
     @staticmethod
+    @ignore_warnings(category=ConvergenceWarning)
     def cv(x, y, p, k, method):
         """
             k-fold cross-validation for polynomial regression
@@ -41,7 +43,7 @@ class CrossValidation:
         cv_error_array = []
         index = 0
         x = pd.DataFrame(x)
-        # print(x.shape)
+
         for i in range(0, k):
             end_index = int(index + size_of_folds)
             cv_data = x.iloc[index: end_index]
@@ -87,11 +89,13 @@ class TestModelRidgeRegression:
 
         continuous_data = load("datasets/trainingset_claim_amounts_only.csv")
         continuous_features = continuous_data.drop("ClaimAmount", axis=1, inplace=False)
-
         continuous_labels = continuous_data.loc[:, "ClaimAmount"]
+        continuous_features.insert(continuous_features.columns.get_loc("feature13_1"), "feature13_0",
+                                   [0] * continuous_features.shape[0])
+        continuous_features.insert(continuous_features.columns.get_loc("feature14_1"), "feature14_0",
+                                   [0] * continuous_features.shape[0])
 
         scaled_continuous_data = self.scaler.fit_transform(continuous_features)
-
         best_lambda = self.find_best_lambda(scaled_continuous_data, continuous_labels)
         ridge_continuous = Ridge(alpha=best_lambda)
 
@@ -153,19 +157,22 @@ class TestModelLasso:
         boolean_labels = boolean_data.loc[:, "ClaimAmount"]
 
         bool_best_lambda = self.find_best_lambda(boolean_features, boolean_labels)
-        ridge_bool = Ridge(alpha=bool_best_lambda)
+        lasso_bool = Lasso(alpha=bool_best_lambda)
 
-        self.boolean_claim_model = ridge_bool.fit(boolean_features, boolean_labels)
+        self.boolean_claim_model = lasso_bool.fit(boolean_features, boolean_labels)
 
         continuous_data = load("datasets/trainingset_claim_amounts_only.csv")
         continuous_features = continuous_data.drop("ClaimAmount", axis=1, inplace=False)
-
+        continuous_features.insert(continuous_features.columns.get_loc("feature13_1"), "feature13_0",
+                                   [0]*continuous_features.shape[0])
+        continuous_features.insert(continuous_features.columns.get_loc("feature14_1"), "feature14_0",
+                                   [0] * continuous_features.shape[0])
         continuous_labels = continuous_data.loc[:, "ClaimAmount"]
 
         best_lambda = self.find_best_lambda(continuous_features, continuous_labels)
-        ridge_continuous = Ridge(alpha=best_lambda)
+        lasso_continuous = Lasso(alpha=best_lambda)
 
-        self.claim_amount_model = ridge_continuous.fit(continuous_features, boolean_labels)
+        self.claim_amount_model = lasso_continuous.fit(continuous_features, continuous_labels)
 
         # For getting the stats for check_claim_amount_mae
         self.predict(continuous_features)
@@ -178,7 +185,7 @@ class TestModelLasso:
         lowest_validation_error = float('inf')
         best_lambda = ''
         for i in self.lambdas:
-            train_error, cv_error = CrossValidation.cv(train_data, train_data_y, i, 5, Ridge)
+            train_error, cv_error = CrossValidation.cv(train_data, train_data_y, i, 5, Lasso)
             train_error_values.append(train_error)
             cv_error_values.append(cv_error)
             if cv_error < lowest_validation_error:
@@ -245,8 +252,9 @@ def check_overall_mae(preds):
     print(f"  Overall MAE: {mae}")
     print()
 
-
-# model = TestModelRidgeRegression(0.1)
-# create_submission(model, 1, 2, False)
+print("Ridge Regression")
+model = TestModelRidgeRegression(0.1)
+create_submission(model, 1, 2, False)
+print("Lasso")
 model = TestModelLasso(0.1)
 create_submission(model, 1, 2, False)
