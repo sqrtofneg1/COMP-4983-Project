@@ -150,7 +150,7 @@ class TestModelLasso:
     def __init__(self, tolerance):
         self.tolerance = tolerance
         self.lambdas = [10 ** -2, 10 ** -1.75, 10 ** -1.5, 10 ** -1.25, 10 ** -1, 10 ** -.75, 10 ** -.5, 10 ** -.25,
-               10 ** 0, 10 ** .25, 10 ** .5, 10 ** .75, 10 ** 1, 10 ** 1.25, 10 ** 1.5, 10 ** 1.75, 10 ** 2]
+                        10 ** 0, 10 ** .25, 10 ** .5, 10 ** .75, 10 ** 1, 10 ** 1.25, 10 ** 1.5, 10 ** 1.75, 10 ** 2]
 
         boolean_data = load("datasets/trainingset_boolean_claim_amount.csv")
         boolean_features = boolean_data.drop("ClaimAmount", axis=1, inplace=False)
@@ -164,7 +164,7 @@ class TestModelLasso:
         continuous_data = load("datasets/trainingset_claim_amounts_only.csv")
         continuous_features = continuous_data.drop("ClaimAmount", axis=1, inplace=False)
         continuous_features.insert(continuous_features.columns.get_loc("feature13_1"), "feature13_0",
-                                   [0]*continuous_features.shape[0])
+                                   [0] * continuous_features.shape[0])
         continuous_features.insert(continuous_features.columns.get_loc("feature14_1"), "feature14_0",
                                    [0] * continuous_features.shape[0])
         continuous_labels = continuous_data.loc[:, "ClaimAmount"]
@@ -252,9 +252,10 @@ def check_overall_mae(preds):
     print(f"  Overall MAE: {mae}")
     print()
 
+
 print("Ridge Regression")
 model = TestModelRidgeRegression(0.1)
-create_submission(model, 1, 2, False)
+create_submission(model, 1, 3, False)
 print("Lasso")
 model = TestModelLasso(0.1)
-create_submission(model, 1, 2, False)
+create_submission(model, 1, 4, False)
