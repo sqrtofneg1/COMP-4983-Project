@@ -20,11 +20,11 @@ class TestModelLinearRegression:
     def __init__(self, tolerance, features):
         self.tolerance = tolerance
         self.feature_set = features
-        self.scale = StandardScaler()
         lin_reg_1 = LinearRegression()
         boolean_data = pd.read_csv("datasets/trainingset_boolean_claim_amount.csv")
         boolean_features = boolean_data.drop("ClaimAmount", axis=1, inplace=False)
-        boolean_features.loc[:, self.feature_set] = self.scale.fit_transform(boolean_features.loc[:, self.feature_set])
+        boolean_features.loc[:, self.feature_set] = StandardScaler().fit_transform(boolean_features.loc[:,
+                                                                                   self.feature_set])
         boolean_labels = boolean_data.loc[:, "ClaimAmount"]
 
         self.boolean_model = lin_reg_1.fit(boolean_features, boolean_labels)
@@ -32,7 +32,8 @@ class TestModelLinearRegression:
         lin_reg_2 = LinearRegression()
         claim_amount_data = pd.read_csv("datasets/trainingset_claim_amounts_only.csv")
         claim_amount_features = claim_amount_data.drop("ClaimAmount", axis=1, inplace=False)
-        claim_amount_features.loc[:, self.feature_set] = self.scale.fit_transform(claim_amount_features.loc[:, self.feature_set])
+        claim_amount_features.loc[:, self.feature_set] = StandardScaler().fit_transform(claim_amount_features.loc[:,
+                                                                                        self.feature_set])
         claim_amount_labels = claim_amount_data.loc[:, "ClaimAmount"]
 
         self.claim_model = lin_reg_2.fit(claim_amount_features, claim_amount_labels)
@@ -41,7 +42,7 @@ class TestModelLinearRegression:
         self.predict(pd.read_csv("datasets/trainingset.csv").drop("ClaimAmount", axis=1, inplace=False))
 
     def predict(self, features):
-        features.loc[:, self.feature_set] = self.scale.fit_transform(features.loc[:, self.feature_set])
+        features.loc[:, self.feature_set] = StandardScaler().fit_transform(features.loc[:, self.feature_set])
         predictions_claim_or_not_raw = self.boolean_model.predict(features)
         predictions_claim_or_not = [0] * len(features)
         for i in range(len(features)):
