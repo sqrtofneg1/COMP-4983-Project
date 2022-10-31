@@ -102,9 +102,11 @@ def check_overall_mae(preds):
     print()
 
 
-# execute
-lin_reg1 = TestModelLinearRegression(0.1, features_set1)
-lin_reg2 = TestModelLinearRegression(0.1, features_set1)
-# create_submission(lin_reg1, 1, 7, True)
-# create_submission(lin_reg2, 1, 8, True)
+def run():
+    print("***** LINEAR REGRESSION #7 *****")
+    model = TestModelLinearRegression(0.1, features_set1)
+    create_submission(model, 1, 7, True)
+    print("***** LINEAR REGRESSION #8 *****")
+    model = TestModelLinearRegression(0.1, features_set2)
+    create_submission(model, 1, 8, True)
 
