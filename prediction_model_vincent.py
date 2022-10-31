@@ -94,10 +94,7 @@ def check_overall_mae(preds):
     print()
 
 
-def main():
-    lin_reg = TestModelLinearRegression(0.1)
-    # create_submission(lin_reg, 1, 7, False)
+# execute
+lin_reg = TestModelLinearRegression(0.1)
+# create_submission(lin_reg, 1, 7, False)
 
-
-if __name__ == '__main__':
-    main()
