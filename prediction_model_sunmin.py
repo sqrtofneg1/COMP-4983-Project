@@ -5,7 +5,6 @@ from data_preprocessing import load
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 
-
 boolean_answers = pd.read_csv("datasets/trainingset_boolean_claim_amount.csv").loc[:, "ClaimAmount"]
 num_expected_claim_amounts = 3335
 claim_amounts_answers = pd.read_csv("datasets/trainingset_claim_amounts_only.csv").loc[:, "ClaimAmount"]
@@ -37,7 +36,8 @@ class TestModelLinearRegression:
         lin_reg_2 = LinearRegression()
         claim_amount_data = pd.read_csv("datasets/trainingset_claim_amounts_only.csv")
         claim_amount_features = claim_amount_data.drop("ClaimAmount", axis=1, inplace=False)
-        claim_amount_features.loc[:, continuous] = StandardScaler().fit_transform(claim_amount_features.loc[:, continuous])
+        claim_amount_features.loc[:, continuous] = StandardScaler().fit_transform(
+            claim_amount_features.loc[:, continuous])
         claim_amount_labels = claim_amount_data.loc[:, "ClaimAmount"]
         self.claim_amount_model = lin_reg_2.fit(claim_amount_features, claim_amount_labels)
 
@@ -84,7 +84,8 @@ def check_claim_or_not(preds):
     print(f"  False positives: {false_positives}")
     print(f"  Percentage false positive: {false_positives / (len(preds) - num_expected_claim_amounts) * 100:.3f}%")
     print(f"  Missed positives: {missed_positives} out of {num_expected_claim_amounts}")
-    print(f"  Percentage correctly identified: {(num_expected_claim_amounts - missed_positives) / num_expected_claim_amounts * 100:.3f}%")
+    print(
+        f"  Percentage correctly identified: {(num_expected_claim_amounts - missed_positives) / num_expected_claim_amounts * 100:.3f}%")
     print(f"  Overall correct percentage: {(len(preds) - false_positives - missed_positives) / len(preds) * 100:.3f}%")
     print()
 
@@ -107,15 +108,15 @@ def check_overall_mae(preds):
     print()
 
 
-print("***** ZEROES *****")
-check_claim_amount_mae(np.zeros(len(claim_amounts_answers)))
-check_claim_or_not(np.zeros(len(boolean_answers)))
-check_overall_mae(np.zeros(len(all_data_answers)))
-create_submission(TestModelZeroes, 1, 1, False)
+def run():
+    print("***** ZEROES *****")
+    check_claim_amount_mae(np.zeros(len(claim_amounts_answers)))
+    check_claim_or_not(np.zeros(len(boolean_answers)))
+    check_overall_mae(np.zeros(len(all_data_answers)))
+    create_submission(TestModelZeroes, 1, 1, False)
 
-print("***** LINEAR REGRESSION *****")
-lin_reg_model = TestModelLinearRegression(0.1)
-create_submission(lin_reg_model, 1, 2, True)
+    print("***** LINEAR REGRESSION *****")
+    lin_reg_model = TestModelLinearRegression(0.1)
+    create_submission(lin_reg_model, 1, 2, True)
 
 # Decision tree for the boolean part?
-

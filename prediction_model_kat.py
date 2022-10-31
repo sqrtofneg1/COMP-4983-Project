@@ -253,9 +253,10 @@ def check_overall_mae(preds):
     print()
 
 
-print("Ridge Regression")
-model = TestModelRidgeRegression(0.1)
-create_submission(model, 1, 3, False)
-print("Lasso")
-model = TestModelLasso(0.1)
-create_submission(model, 1, 4, False)
+def run():
+    print("***** RIDGE REGRESSION *****")
+    model = TestModelRidgeRegression(0.1)
+    create_submission(model, 1, 3, False)
+    print("***** LASSO *****")
+    model = TestModelLasso(0.1)
+    create_submission(model, 1, 4, False)
