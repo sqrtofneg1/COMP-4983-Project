@@ -3,22 +3,28 @@ import pandas as pd
 from create_submission_csv import create_submission
 from data_preprocessing import load
 from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import StandardScaler
 
 boolean_answers = pd.read_csv("datasets/trainingset_boolean_claim_amount.csv").loc[:, "ClaimAmount"]
 num_expected_claim_amounts = 3335
 claim_amounts_answers = pd.read_csv("datasets/trainingset_claim_amounts_only.csv").loc[:, "ClaimAmount"]
 all_data_answers = pd.read_csv("datasets/trainingset.csv").loc[:, "ClaimAmount"]
+features_set1 = ["feature1"]
+features_set2 = ["feature1"]
 
-# copied base code. Next Step: Choose features and modify code to get prediction
+# select features for set 1 and set 2 (5+)
 
 
 class TestModelLinearRegression:
 
-    def __init__(self, tolerance):
+    def __init__(self, tolerance, features):
         self.tolerance = tolerance
+        self.feature_set = features
+        self.scale = StandardScaler()
         lin_reg_1 = LinearRegression()
         boolean_data = pd.read_csv("datasets/trainingset_boolean_claim_amount.csv")
         boolean_features = boolean_data.drop("ClaimAmount", axis=1, inplace=False)
+        boolean_features.loc[:, self.feature_set] = self.scale.fit_transform(boolean_features.loc[:, self.feature_set])
         boolean_labels = boolean_data.loc[:, "ClaimAmount"]
 
         self.boolean_model = lin_reg_1.fit(boolean_features, boolean_labels)
@@ -26,6 +32,7 @@ class TestModelLinearRegression:
         lin_reg_2 = LinearRegression()
         claim_amount_data = pd.read_csv("datasets/trainingset_claim_amounts_only.csv")
         claim_amount_features = claim_amount_data.drop("ClaimAmount", axis=1, inplace=False)
+        claim_amount_features.loc[:, self.feature_set] = self.scale.fit_transform(claim_amount_features.loc[:, self.feature_set])
         claim_amount_labels = claim_amount_data.loc[:, "ClaimAmount"]
 
         self.claim_model = lin_reg_2.fit(claim_amount_features, claim_amount_labels)
@@ -34,8 +41,8 @@ class TestModelLinearRegression:
         self.predict(pd.read_csv("datasets/trainingset.csv").drop("ClaimAmount", axis=1, inplace=False))
 
     def predict(self, features):
-        features = [features]                   # placeholder
-        predictions_claim_or_not_raw = self.claim_or_not_model.predict(features)
+        features.loc[:, self.feature_set] = self.scale.fit_transform(features.loc[:, self.feature_set])
+        predictions_claim_or_not_raw = self.boolean_model.predict(features)
         predictions_claim_or_not = [0] * len(features)
         for i in range(len(features)):
             if predictions_claim_or_not_raw[i] < self.tolerance:  # tune tolerance value to be closer to actual ratio
@@ -44,7 +51,7 @@ class TestModelLinearRegression:
                 predictions_claim_or_not[i] = 1
         check_claim_or_not(predictions_claim_or_not)  # only fires on trainingset
 
-        predictions_claim_amount_raw = self.claim_amount_model.predict(features)
+        predictions_claim_amount_raw = self.claim_model.predict(features)
         predictions_claim_amount = [0] * len(features)
         for i in range(len(features)):
             if predictions_claim_or_not[i] == 0:  # tune tolerance value to be closer to actual ratio
@@ -95,6 +102,8 @@ def check_overall_mae(preds):
 
 
 # execute
-lin_reg = TestModelLinearRegression(0.1)
-# create_submission(lin_reg, 1, 7, False)
+lin_reg1 = TestModelLinearRegression(0.1, features_set1)
+lin_reg2 = TestModelLinearRegression(0.1, features_set1)
+# create_submission(lin_reg1, 1, 7, True)
+# create_submission(lin_reg2, 1, 8, True)
 
