@@ -9,10 +9,8 @@ boolean_answers = pd.read_csv("datasets/trainingset_boolean_claim_amount.csv").l
 num_expected_claim_amounts = 3335
 claim_amounts_answers = pd.read_csv("datasets/trainingset_claim_amounts_only.csv").loc[:, "ClaimAmount"]
 all_data_answers = pd.read_csv("datasets/trainingset.csv").loc[:, "ClaimAmount"]
-features_set1 = ["feature1"]
-features_set2 = ["feature1"]
-
-# select features for set 1 and set 2 (5+)
+features_set1 = ["feature1", "feature2", "feature6", "feature8", "feature10"]
+features_set2 = ["feature1", "feature2", "feature8", "feature10", "feature12"]
 
 
 class TestModelLinearRegression:
