@@ -3,10 +3,9 @@ import pandas as pd
 from create_submission_csv import create_submission
 from data_preprocessing import load
 from sklearn.linear_model import LinearRegression, Ridge
+import stat_functions as stats
 
 
-#do later: find the most important features and implememnt polyval onto them, arbitrary degree?
-#solve for best degree if have time
 class TestModel:
 
     def __init__(self, degree):
