@@ -35,6 +35,7 @@ def check_claim_amount_mae(preds):
     mae = np.mean(abs(preds - claim_amounts_answers))
     print(f"  MAE: {mae}")
     print()
+    return mae
 
 
 def check_overall_mae(preds):
@@ -44,3 +45,4 @@ def check_overall_mae(preds):
     mae = np.mean(abs(preds - all_data_answers))
     print(f"  Overall MAE: {mae}")
     print()
+    return mae
