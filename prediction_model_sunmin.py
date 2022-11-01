@@ -8,11 +8,6 @@ import prediction_model_sunmin_tensorflow as tensorflow_model
 import stat_functions as stats
 
 
-boolean_answers = pd.read_csv("datasets/trainingset_boolean_claim_amount.csv").loc[:, "ClaimAmount"]
-num_expected_claim_amounts = 3335
-claim_amounts_answers = pd.read_csv("datasets/trainingset_claim_amounts_only.csv").loc[:, "ClaimAmount"]
-all_data = pd.read_csv("datasets/trainingset.csv")
-all_data_answers = all_data.loc[:, "ClaimAmount"]
 categorical = ["feature3", "feature4", "feature5", "feature7", "feature9", "feature11",
                "feature13", "feature14", "feature15", "feature16", "feature18"]
 continuous = ["feature1", "feature2", "feature6", "feature8", "feature10", "feature12", "feature17"]
@@ -59,7 +54,7 @@ class TestModelLinearRegression:  # data normalization only on continuous data
         if self.tolerance is None:
             sorted_arr = sorted(predictions_for_tolerance)
             print(np.percentile(sorted_arr, 95))
-            self.tolerance = sorted_arr[-num_expected_claim_amounts]
+            self.tolerance = sorted_arr[-stats.num_expected_claim_amounts]
         print(f"TOLERANCE: {self.tolerance}")
 
     def predict(self, features):
@@ -140,9 +135,9 @@ class TestModelTFLinearRegression:  # data normalization on all data
 
 def run():
     print("***** ZEROES *****")
-    stats.check_claim_amount_mae(np.zeros(len(claim_amounts_answers)))
-    stats.check_claim_or_not(np.zeros(len(boolean_answers)))
-    stats.check_overall_mae(np.zeros(len(all_data_answers)))
+    stats.check_claim_amount_mae(np.zeros(len(stats.claim_amounts_answers)))
+    stats.check_claim_or_not(np.zeros(len(stats.boolean_answers)))
+    stats.check_overall_mae(np.zeros(len(stats.all_data_answers)))
     create_submission(TestModelZeroes, 1, 1, False)
 
     print("***** LINEAR REGRESSION *****")
