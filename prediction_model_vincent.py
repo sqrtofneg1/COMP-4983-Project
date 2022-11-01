@@ -107,4 +107,3 @@ def run():
     print("***** LINEAR REGRESSION #8 *****")
     model = TestModelLinearRegression(0.1, features_set2)
     create_submission(model, 1, 8, True)
-
