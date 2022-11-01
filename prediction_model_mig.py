@@ -18,15 +18,14 @@ class TestModel:
 
         best_feature = self.find_best_feature(claim_amount_features, claim_amount_labels)
 
-        best_feature_col = claim_amount_data.loc[:, f"feature{best_feature}"]
+        self.best_feature_col = claim_amount_data.loc[:, f"feature{best_feature}"]
 
-        self.reg = np.polyfit(x=best_feature_col, y=claim_amount_labels, deg=self.degree)
+        self.reg = np.polyfit(x=self.best_feature_col, y=claim_amount_labels, deg=self.degree)
 
         self.predict(pd.read_csv("datasets/trainingset_claim_amounts_only.csv"))
 
     def predict(self, dataset):
-        best_feature_col = dataset.loc[:, f"feature1"]
-        prediction = np.polyval(self.reg, best_feature_col)
+        prediction = np.polyval(self.reg, self.best_feature_col)
         df = pd.DataFrame()
         df['ClaimAmount']=pd.Series(prediction)
         return df
@@ -44,7 +43,7 @@ class TestModel:
 
 
 deg5 = TestModel(5)
-deg25 = TestModel(25)
+deg25 = TestModel(15)
 
 create_submission(deg5, 1, 5, True)
 create_submission(deg25, 1, 6, True)
