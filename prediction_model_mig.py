@@ -43,7 +43,7 @@ class TestModel:
 
 
 deg5 = TestModel(5)
-deg25 = TestModel(15)
+deg15 = TestModel(15)
 
 create_submission(deg5, 1, 5, True)
-create_submission(deg25, 1, 6, True)
+create_submission(deg15, 1, 6, True)
