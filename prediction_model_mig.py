@@ -40,10 +40,9 @@ class TestModel:
             scores.append(np.abs(v))
         return scores.index(max(scores))
 
+def run():
+    deg5 = TestModel(5)
+    deg15 = TestModel(15)
 
-
-deg5 = TestModel(5)
-deg15 = TestModel(15)
-
-create_submission(deg5, 1, 5, True)
-create_submission(deg15, 1, 6, True)
+    create_submission(deg5, 1, 5, True)
+    create_submission(deg15, 1, 6, True)

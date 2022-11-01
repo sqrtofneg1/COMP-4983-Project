@@ -8,7 +8,7 @@ def run_models():
     sunmin.run()
     kat.run()
     vincent.run()
-    # mig.run()
+    mig.run()
 
 
 if __name__ == "__main__":
