@@ -12,19 +12,35 @@ def check_claim_or_not(preds):
     if len(preds) != len(boolean_answers):
         return
     false_positives = 0
-    missed_positives = 0
+    false_negatives = 0
+    true_positives = 0
+    true_negatives = 0
     for i in range(len(preds)):
-        if preds[i] == 0 and boolean_answers[i] == 1:
-            missed_positives += 1
-        if preds[i] == 1 and boolean_answers[i] == 0:
-            false_positives += 1
+        if preds[i] == 0:
+            if boolean_answers[i] == 1:
+                false_negatives += 1
+            else:
+                true_negatives += 1
+        if preds[i] == 1:
+            if boolean_answers[i] == 0:
+                false_positives += 1
+            else:
+                true_positives += 1
     print(" *** ClaimAmount Identification Stats ***")
+    print(f"  True positives: {true_positives}")
+    print(f"  True negatives: {true_negatives}")
     print(f"  False positives: {false_positives}")
-    print(f"  Percentage false positive: {false_positives / (len(preds) - num_expected_claim_amounts) * 100:.3f}%")
-    print(f"  Missed positives: {missed_positives} out of {num_expected_claim_amounts}")
-    print(f"  Percentage correctly identified: "
-          f"{(num_expected_claim_amounts - missed_positives) / num_expected_claim_amounts * 100:.3f}%")
-    print(f"  Overall correct percentage: {(len(preds) - false_positives - missed_positives) / len(preds) * 100:.3f}%")
+    print(f"  False negatives: {false_negatives}")
+    print(f"  Accuracy: {(len(preds) - false_positives - false_negatives) / len(preds) * 100:.3f}%")
+    if true_positives + false_positives == 0:
+        print(f"  Precision: NaN")
+    else:
+        print(f"  Precision: {true_positives / (true_positives + false_positives) * 100:.3f}%")
+    print(f"  Sensitivity/Recall: {true_positives / num_expected_claim_amounts * 100:.3f}%")
+    print(f"  Specificity: {true_negatives / (len(preds) - num_expected_claim_amounts) * 100:.3f}%")
+    print(f"  False Positive Rate: {false_positives / (len(preds) - num_expected_claim_amounts) * 100:.3f}%")
+    print(f"  False Negative Rate/MissRate: {false_negatives / num_expected_claim_amounts * 100:.3f}%")
+
     print()
 
 
