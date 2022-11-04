@@ -28,7 +28,7 @@ def check_claim_or_not(preds):
                 true_positives += 1
     f1_score = true_positives / (true_positives + 0.5 * (false_positives + false_negatives))
     print(" *** ClaimAmount Identification Stats ***")
-    print(f"  F1 Score: {f1_score:.3f}")
+    print(f" *F1 Score: {f1_score:.6f}")
     print(f"  True positives: {true_positives}")
     print(f"  True negatives: {true_negatives}")
     print(f"  False positives: {false_positives}")
@@ -61,6 +61,6 @@ def check_overall_mae(preds):
         return
     print(" *** Overall Prediction Stats ***")
     mae = np.mean(abs(preds - all_data_answers))
-    print(f"  Overall MAE: {mae}")
+    print(f"  Overall MAE: {mae:.4f}")
     print()
     return mae
