@@ -26,7 +26,9 @@ def check_claim_or_not(preds):
                 false_positives += 1
             else:
                 true_positives += 1
+    f1_score = true_positives / (true_positives + 0.5 * (false_positives + false_negatives))
     print(" *** ClaimAmount Identification Stats ***")
+    print(f"  F1 Score: {f1_score:.3f}")
     print(f"  True positives: {true_positives}")
     print(f"  True negatives: {true_negatives}")
     print(f"  False positives: {false_positives}")
