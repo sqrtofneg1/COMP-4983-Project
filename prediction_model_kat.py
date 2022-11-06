@@ -100,7 +100,7 @@ class TestModelRidgeRegression:
         best_lambda = self.find_best_lambda(scaled_continuous_data, continuous_labels)
         ridge_continuous = Ridge(alpha=best_lambda)
 
-        self.claim_amount_model = ridge_continuous.fit(scaled_boolean_data, boolean_labels)
+        self.claim_amount_model = ridge_continuous.fit(scaled_continuous_data, continuous_labels)
 
         # For getting the stats for check_claim_amount_mae
         self.predict(scaled_continuous_data)
@@ -115,7 +115,7 @@ class TestModelRidgeRegression:
         lowest_validation_error = float('inf')
         best_lambda = ''
         for i in self.lambdas:
-            train_error, cv_error = CrossValidation.cv(train_data, train_data_y, i, 5, Ridge)
+            train_error, cv_error = CrossValidation.cv(train_data, train_data_y, i, 10, Ridge)
             train_error_values.append(train_error)
             cv_error_values.append(cv_error)
             if cv_error < lowest_validation_error:
@@ -186,7 +186,7 @@ class TestModelLasso:
         lowest_validation_error = float('inf')
         best_lambda = ''
         for i in self.lambdas:
-            train_error, cv_error = CrossValidation.cv(train_data, train_data_y, i, 5, Lasso)
+            train_error, cv_error = CrossValidation.cv(train_data, train_data_y, i, 10, Lasso)
             train_error_values.append(train_error)
             cv_error_values.append(cv_error)
             if cv_error < lowest_validation_error:
