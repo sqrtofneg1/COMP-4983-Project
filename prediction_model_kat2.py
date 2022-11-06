@@ -1,4 +1,5 @@
 from numpy import mean
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import RepeatedStratifiedKFold
 from create_submission_csv import create_submission
@@ -23,8 +24,8 @@ continuous_labels = continuous_data.loc[:, "ClaimAmount"]
 class DecisionTree:
     def __init__(self, tolerance, X, y):
         self.tolerance = tolerance
-        treeclass = DecisionTreeClassifier()
-        self.boolean_claim_model = treeclass.fit(X, y)
+        forest = RandomForestClassifier(n_estimators=100, random_state=100)
+        self.boolean_claim_model = forest.fit(X, y)
         treereg = DecisionTreeRegressor()
         self.claim_amount_model = treereg.fit(continuous_features, continuous_labels)
 
@@ -94,19 +95,19 @@ class UnderOverSamplerData:
         return self.X, self.y
 
 
-# def run():
-print("***** UNDERSAMPLE WITH DECISON TREE *****")
-under = UnderSamplerData()
-X_under, y_under = under.values()
-model = DecisionTree(0.1, X_under, y_under)
-create_submission(model, 2, 3, True)
-print("***** OVERSAMPLE WITH DECISION TREE *****")
-over = OverSamplerData()
-X_over, y_over = over.values()
-model = DecisionTree(0.1, X_over, y_over)
-create_submission(model, 2, 4, True)
-print("***** UNDER-OVERSAMPLE WITH DECISION TREE *****")
-under_over = UnderOverSamplerData()
-X_under_over, y_under_over = under_over.values()
-model = DecisionTree(0.1, X_under_over, y_under_over)
-create_submission(model, 2, 5, True)
+def run():
+    print("***** UNDERSAMPLE WITH DECISON TREE *****")
+    under = UnderSamplerData()
+    X_under, y_under = under.values()
+    model = DecisionTree(0.1, X_under, y_under)
+    create_submission(model, 2, 3, True)
+    print("***** OVERSAMPLE WITH DECISION TREE *****")
+    over = OverSamplerData()
+    X_over, y_over = over.values()
+    model = DecisionTree(0.1, X_over, y_over)
+    create_submission(model, 2, 4, True)
+    print("***** UNDER-OVERSAMPLE WITH DECISION TREE *****")
+    under_over = UnderOverSamplerData()
+    X_under_over, y_under_over = under_over.values()
+    model = DecisionTree(0.1, X_under_over, y_under_over)
+    create_submission(model, 2, 5, True)

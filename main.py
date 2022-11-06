@@ -1,4 +1,4 @@
-import prediction_model_kat as kat
+import prediction_model_kat2 as kat
 import prediction_model_sunmin as sunmin
 import prediction_model_vincent as vincent
 import prediction_model_mig as mig
