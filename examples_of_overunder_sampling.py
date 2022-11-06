@@ -1,15 +1,9 @@
-
-# example of evaluating a decision tree with random oversampling
 from numpy import mean
-from sklearn.datasets import make_classification
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import RepeatedStratifiedKFold
 from sklearn.tree import DecisionTreeClassifier
 from imblearn.pipeline import Pipeline
 from imblearn.over_sampling import RandomOverSampler
-# example of random undersampling to balance the class distribution
-from collections import Counter
-from sklearn.datasets import make_classification
 from imblearn.under_sampling import RandomUnderSampler
 import pandas as pd
 data = pd.read_csv('datasets/trainingset_boolean_claim_amount.csv')
