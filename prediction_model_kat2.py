@@ -25,7 +25,9 @@ class DecisionTree:
     def __init__(self, tolerance, X, y):
         self.tolerance = tolerance
         forest = RandomForestClassifier(n_estimators=100, random_state=100)
+        #trees = DecisionTreeClassifier()
         self.boolean_claim_model = forest.fit(X, y)
+        #self.boolean_claim_model = trees.fit(X, y)
         treereg = DecisionTreeRegressor()
         self.claim_amount_model = treereg.fit(continuous_features, continuous_labels)
 
