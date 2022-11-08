@@ -6,7 +6,7 @@ from sklearn.linear_model import LinearRegression, Ridge
 import stat_functions as stats
 
 
-class TestModel:
+class TestModelPoly:
 
     def __init__(self, degree):
         self.degree = degree
@@ -24,9 +24,11 @@ class TestModel:
         self.predict(pd.read_csv("datasets/trainingset_claim_amounts_only.csv"))
 
     def predict(self, dataset):
-        prediction = np.polyval(self.reg, self.best_feature_col)
+        test_feature = dataset.loc[:, "feature1"]
+        prediction = np.polyval(self.reg, test_feature)
+        stats.check_claim_amount_mae(prediction)
         df = pd.DataFrame()
-        df['ClaimAmount']=pd.Series(prediction)
+        df['ClaimAmount'] = pd.Series(prediction)
         return df
 
     def find_best_feature(self, feats, labes):
@@ -39,9 +41,49 @@ class TestModel:
             scores.append(np.abs(v))
         return scores.index(max(scores))
 
-def run():
-    deg5 = TestModel(5)
-    deg15 = TestModel(15)
 
-    create_submission(deg5, 1, 5, True)
-    create_submission(deg15, 1, 6, True)
+class TestModelLin:
+
+    def __init__(self):
+        claim_amount_data = load("datasets/trainingset.csv")
+        claim_amount_features = claim_amount_data.drop("ClaimAmount", axis=1, inplace=False)
+        claim_amount_labels = claim_amount_data.loc[:, "ClaimAmount"]
+
+        self.lg = LinearRegression()
+        self.lg.fit(claim_amount_features, claim_amount_labels)
+
+        self.predict(load("datasets/trainingset.csv").drop("ClaimAmount", axis=1, inplace=False))
+
+    def predict(self, dataset):
+        raw = self.lg.predict(dataset)
+        true = [0] * raw.size
+        for i in range(raw.size):
+            if raw[i] < 0:  # clear negative values
+                true[i] = 0
+            else:
+                true[i] = raw[i]
+        df = pd.DataFrame()
+        df['ClaimAmount'] = pd.Series(true)
+
+        stats.check_overall_mae(true)
+
+        return df
+
+def run():
+    # deg5 = TestModelPoly(5)
+    # deg15 = TestModelPoly(15)
+    #
+    # create_submission(deg5, 1, 5, True)
+    # create_submission(deg15, 1, 6, True)
+    deg10 = TestModelPoly(10)
+    create_submission(deg10, 2, 6, True)
+
+    lr = TestModelLin()
+    create_submission(lr, 2, 9, False)
+
+
+
+run()
+
+
+
