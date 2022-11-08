@@ -10,8 +10,13 @@ boolean_answers = pd.read_csv("datasets/trainingset_boolean_claim_amount.csv").l
 num_expected_claim_amounts = 3335
 claim_amounts_answers = pd.read_csv("datasets/trainingset_claim_amounts_only.csv").loc[:, "ClaimAmount"]
 all_data_answers = pd.read_csv("datasets/trainingset.csv").loc[:, "ClaimAmount"]
-features_set1 = ["feature1", "feature2", "feature6", "feature8", "feature10"]
-features_set2 = ["feature1", "feature2", "feature8", "feature10", "feature12"]
+features_set1 = ["feature1", "feature2", "feature6", "feature8", "feature10", "feature17"]
+features_set2 = ["feature2", "feature8", "feature10", "feature12", "feature17"]
+all_features = ["feature1", "feature2", "feature3", "feature4", "feature5", "feature6", "feature7", "feature8",
+                "feature9", "feature10", "feature11", "feature12", "feature13", "feature14", "feature15",
+                "feature16", "feature17", "feature18"]
+categorical = ["feature3", "feature4", "feature5", "feature7", "feature9", "feature11",
+               "feature13", "feature14", "feature15", "feature16", "feature18"]
 
 
 class TestModelLinearRegression:
@@ -64,9 +69,24 @@ class TestModelLinearRegression:
 
 
 def run():
+    # print("***** LINEAR REGRESSION #7 *****")
+    # model = TestModelLinearRegression(0.1, features_set1)
+    # create_submission(model, 1, 7, True)
+    # print("***** LINEAR REGRESSION #8 *****")
+    # model = TestModelLinearRegression(0.1, features_set2)
+    # create_submission(model, 1, 8, True)
+
     print("***** LINEAR REGRESSION #7 *****")
     model = TestModelLinearRegression(0.1, features_set1)
-    create_submission(model, 1, 7, True)
+    create_submission(model, 2, 7, True)
     print("***** LINEAR REGRESSION #8 *****")
     model = TestModelLinearRegression(0.1, features_set2)
-    create_submission(model, 1, 8, True)
+    create_submission(model, 2, 8, True)
+
+
+def main():
+    run()
+
+
+if __name__ == '__main__':
+    main()
