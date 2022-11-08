@@ -153,7 +153,7 @@ class TestModelRandomForestLasso:
         claim_amount_labels = claim_amount_data.loc[:, "ClaimAmount"]
         lambdas_lasso = [10 ** (x * .25) for x in (range(-8, 14))]
         lasso_results = [kfoldCV_lasso(claim_amount_features, claim_amount_labels, 5, lambda_value) for lambda_value in lambdas_lasso]
-        lasso_cv_errors = [lasso_results[i][1].tolist() for i in range(len(lasso_results))]
+        lasso_cv_errors = [(lasso_results[i][1] + lasso_results[i][0]).tolist() for i in range(len(lasso_results))]
         lowest_MAE_lasso = min(lasso_cv_errors)
         selected_lambda = lambdas_lasso[lasso_cv_errors.index(lowest_MAE_lasso)]
         print(f"Lasso Selected Lambda: {selected_lambda}")
