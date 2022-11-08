@@ -6,7 +6,7 @@ from sklearn.linear_model import LinearRegression, Ridge
 import stat_functions as stats
 
 
-class TestModel:
+class TestModelPoly:
 
     def __init__(self, degree):
         self.degree = degree
@@ -24,7 +24,8 @@ class TestModel:
         self.predict(pd.read_csv("datasets/trainingset_claim_amounts_only.csv"))
 
     def predict(self, dataset):
-        prediction = np.polyval(self.reg, self.best_feature_col)
+        test_feature = dataset.loc[:, "feature1"]
+        prediction = np.polyval(self.reg, test_feature)
         df = pd.DataFrame()
         df['ClaimAmount']=pd.Series(prediction)
         return df
@@ -40,8 +41,11 @@ class TestModel:
         return scores.index(max(scores))
 
 def run():
-    deg5 = TestModel(5)
-    deg15 = TestModel(15)
+    deg5 = TestModelPoly(5)
+    deg15 = TestModelPoly(15)
 
     create_submission(deg5, 1, 5, True)
     create_submission(deg15, 1, 6, True)
+
+run()
+
