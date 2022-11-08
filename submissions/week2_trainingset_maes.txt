@@ -1,6 +1,6 @@
 Training Set MAEs:
-2_4_1.csv:
-2_4_2.csv:
+2_4_1.csv: 201.2764
+2_4_2.csv: 202.7986
 2_4_3.csv:
 2_4_4.csv:
 2_4_5.csv:
