@@ -24,11 +24,11 @@ continuous_labels = continuous_data.loc[:, "ClaimAmount"]
 class DecisionTree:
     def __init__(self, tolerance, X, y):
         self.tolerance = tolerance
-        forest = RandomForestClassifier(n_estimators=100, random_state=100)
+        forest = RandomForestClassifier(n_estimators=300, random_state=100)
         #trees = DecisionTreeClassifier()
         self.boolean_claim_model = forest.fit(X, y)
         #self.boolean_claim_model = trees.fit(X, y)
-        treereg = DecisionTreeRegressor(max_features=12)
+        treereg = DecisionTreeRegressor(max_features=14)
         self.claim_amount_model = treereg.fit(continuous_features, continuous_labels)
 
         # For getting the stats for check_claim_amount_mae
@@ -98,18 +98,18 @@ class UnderOverSamplerData:
 
 
 def run():
-    print("***** UNDERSAMPLE WITH DECISON TREE *****")
-    under = UnderSamplerData()
-    X_under, y_under = under.values()
-    model = DecisionTree(0.1, X_under, y_under)
-    create_submission(model, 2, 3, True)
+    # print("***** UNDERSAMPLE WITH DECISON TREE *****")
+    # under = UnderSamplerData()
+    # X_under, y_under = under.values()
+    # model = DecisionTree(0.1, X_under, y_under)
+    # create_submission(model, 2, 3, True)
     print("***** OVERSAMPLE WITH DECISION TREE *****")
     over = OverSamplerData()
     X_over, y_over = over.values()
     model = DecisionTree(0.1, X_over, y_over)
-    create_submission(model, 2, 4, True)
+    create_submission(model, 3, 3, True)
     print("***** UNDER-OVERSAMPLE WITH DECISION TREE *****")
     under_over = UnderOverSamplerData()
     X_under_over, y_under_over = under_over.values()
     model = DecisionTree(0.1, X_under_over, y_under_over)
-    create_submission(model, 2, 5, True)
+    create_submission(model, 3, 4, True)

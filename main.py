@@ -6,7 +6,7 @@ import prediction_model_mig as mig
 
 
 def run_models():
-    # sunmin.run()
+    sunmin.run()
     kat.run()
     kat2.run()
     # vincent.run()
