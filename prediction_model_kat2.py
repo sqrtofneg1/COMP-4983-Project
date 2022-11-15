@@ -28,7 +28,7 @@ class DecisionTree:
         #trees = DecisionTreeClassifier()
         self.boolean_claim_model = forest.fit(X, y)
         #self.boolean_claim_model = trees.fit(X, y)
-        treereg = DecisionTreeRegressor()
+        treereg = DecisionTreeRegressor(max_features=12)
         self.claim_amount_model = treereg.fit(continuous_features, continuous_labels)
 
         # For getting the stats for check_claim_amount_mae

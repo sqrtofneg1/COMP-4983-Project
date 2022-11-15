@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from imblearn.ensemble import BalancedRandomForestClassifier
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn.ensemble import RandomForestClassifier
@@ -228,78 +229,6 @@ class CrossValidation:
 #         stats.check_overall_mae(predictions_claim_amount)
 #         return predictions_claim_amount
 
-class TestModelRidgeRegression2rf:
-
-    def __init__(self, tolerance, X, y):
-        self.tolerance = tolerance
-        self.lambdas = [10 ** -3, 10 ** -2, 10 ** -1, 10 ** 0, 10 ** 1, 10 ** 2, 10 ** 3, 10 ** 4, 10 ** 5, 10 ** 6,
-                        10 ** 7,
-                        10 ** 8, 10 ** 9, 10 ** 10]
-        self.scaler = StandardScaler()
-
-        forest = RandomForestClassifier(n_estimators=100, random_state=100)
-        # trees = DecisionTreeClassifier()
-        self.boolean_claim_model = forest.fit(X, y)
-        # self.boolean_claim_model = trees.fit(X, y)
-
-        # continuous_data = load("datasets/trainingset_claim_amounts_only.csv")
-        # continuous_features = continuous_data.drop("ClaimAmount", axis=1, inplace=False)
-        # continuous_labels = continuous_data.loc[:, "ClaimAmount"]
-        # continuous_features.insert(continuous_features.columns.get_loc("feature13_1"), "feature13_0",
-        #                            [0] * continuous_features.shape[0])
-        # continuous_features.insert(continuous_features.columns.get_loc("feature14_1"), "feature14_0",
-        #                            [0] * continuous_features.shape[0])
-
-        scaled_continuous_data = self.scaler.fit_transform(continuous_features)
-        best_lambda = self.find_best_lambda(scaled_continuous_data, continuous_labels)
-        print(best_lambda)
-        ridge_continuous = Ridge(alpha=best_lambda)
-
-        self.claim_amount_model = ridge_continuous.fit(scaled_continuous_data, continuous_labels)
-
-        # For getting the stats for check_claim_amount_mae
-        self.predict(scaled_continuous_data)
-        # For getting the stats for check_claim_or_not
-        data = load("datasets/trainingset.csv").drop("ClaimAmount", axis=1, inplace=False)
-        scaled_data = self.scaler.fit_transform(data)
-        self.predict(scaled_data)
-
-    def find_best_lambda(self, train_data, train_data_y):
-        train_error_values = []
-        cv_error_values = []
-        lowest_validation_error = float('inf')
-        best_lambda = ''
-        for i in self.lambdas:
-            train_error, cv_error = CrossValidation.cv(train_data, train_data_y, i, 10, Ridge)
-            train_error_values.append(train_error)
-            cv_error_values.append(cv_error)
-            if cv_error < lowest_validation_error:
-                lowest_validation_error = cv_error
-                best_lambda = i
-        return best_lambda
-
-    def predict(self, features):
-        features = self.scaler.fit_transform(features)
-        predictions_claim_or_not_raw = self.boolean_claim_model.predict(features)
-        predictions_claim_or_not = [0] * len(features)
-        for i in range(len(features)):
-            if predictions_claim_or_not_raw[i] < self.tolerance:  # tune tolerance value to be closer to actual ratio
-                predictions_claim_or_not[i] = 0
-            else:
-                predictions_claim_or_not[i] = 1
-        stats.check_claim_or_not(predictions_claim_or_not)  # only fires on trainingset
-
-        predictions_claim_amount_raw = self.claim_amount_model.predict(features)
-        predictions_claim_amount = [0] * len(features)
-        for i in range(len(features)):
-            if predictions_claim_or_not[i] == 0:  # tune tolerance value to be closer to actual ratio
-                predictions_claim_amount[i] = 0
-            else:
-                predictions_claim_amount[i] = predictions_claim_amount_raw[i]
-        stats.check_claim_amount_mae(predictions_claim_amount)  # only fires on trainingset_claim_amounts_only
-        stats.check_overall_mae(predictions_claim_amount)
-        return predictions_claim_amount
-
 
 class TestModelLasso2rf:
 
@@ -347,79 +276,6 @@ class TestModelLasso2rf:
         return best_lambda
 
     def predict(self, features):
-        predictions_claim_or_not_raw = self.boolean_claim_model.predict(features)
-        predictions_claim_or_not = [0] * len(features)
-        for i in range(len(features)):
-            if predictions_claim_or_not_raw[i] < self.tolerance:  # tune tolerance value to be closer to actual ratio
-                predictions_claim_or_not[i] = 0
-            else:
-                predictions_claim_or_not[i] = 1
-        stats.check_claim_or_not(predictions_claim_or_not)  # only fires on trainingset
-
-        predictions_claim_amount_raw = self.claim_amount_model.predict(features)
-        predictions_claim_amount = [0] * len(features)
-        for i in range(len(features)):
-            if predictions_claim_or_not[i] == 0:  # tune tolerance value to be closer to actual ratio
-                predictions_claim_amount[i] = 0
-            else:
-                predictions_claim_amount[i] = predictions_claim_amount_raw[i]
-        stats.check_claim_amount_mae(predictions_claim_amount)  # only fires on trainingset_claim_amounts_only
-        stats.check_overall_mae(predictions_claim_amount)
-        return predictions_claim_amount
-
-
-class TestModelRidgeRegression2dt:
-
-    def __init__(self, tolerance, X, y):
-        self.tolerance = tolerance
-        self.lambdas = [10 ** -3, 10 ** -2, 10 ** -1, 10 ** 0, 10 ** 1, 10 ** 2, 10 ** 3, 10 ** 4, 10 ** 5, 10 ** 6,
-                        10 ** 7,
-                        10 ** 8, 10 ** 9, 10 ** 10]
-        self.scaler = StandardScaler()
-
-        forest = RandomForestClassifier(n_estimators=100, random_state=100)
-        # trees = DecisionTreeClassifier()
-        self.boolean_claim_model = forest.fit(X, y)
-        # self.boolean_claim_model = trees.fit(X, y)
-
-        # continuous_data = load("datasets/trainingset_claim_amounts_only.csv")
-        # continuous_features = continuous_data.drop("ClaimAmount", axis=1, inplace=False)
-        # continuous_labels = continuous_data.loc[:, "ClaimAmount"]
-        # continuous_features.insert(continuous_features.columns.get_loc("feature13_1"), "feature13_0",
-        #                            [0] * continuous_features.shape[0])
-        # continuous_features.insert(continuous_features.columns.get_loc("feature14_1"), "feature14_0",
-        #                            [0] * continuous_features.shape[0])
-
-        scaled_continuous_data = self.scaler.fit_transform(continuous_features)
-        best_lambda = self.find_best_lambda(scaled_continuous_data, continuous_labels)
-        print(best_lambda)
-        ridge_continuous = Ridge(alpha=best_lambda)
-
-        self.claim_amount_model = ridge_continuous.fit(scaled_continuous_data, continuous_labels)
-
-        # For getting the stats for check_claim_amount_mae
-        self.predict(scaled_continuous_data)
-        # For getting the stats for check_claim_or_not
-        data = load("datasets/trainingset.csv").drop("ClaimAmount", axis=1, inplace=False)
-        scaled_data = self.scaler.fit_transform(data)
-        self.predict(scaled_data)
-
-    def find_best_lambda(self, train_data, train_data_y):
-        train_error_values = []
-        cv_error_values = []
-        lowest_validation_error = float('inf')
-        best_lambda = ''
-        for i in self.lambdas:
-            train_error, cv_error = CrossValidation.cv(train_data, train_data_y, i, 10, Ridge)
-            train_error_values.append(train_error)
-            cv_error_values.append(cv_error)
-            if cv_error < lowest_validation_error:
-                lowest_validation_error = cv_error
-                best_lambda = i
-        return best_lambda
-
-    def predict(self, features):
-        features = self.scaler.fit_transform(features)
         predictions_claim_or_not_raw = self.boolean_claim_model.predict(features)
         predictions_claim_or_not = [0] * len(features)
         for i in range(len(features)):
@@ -548,162 +404,52 @@ class UnderOverSamplerData:
 
 
 def run():
+    print("***** RANDOM FOREST *****")
     under = UnderSamplerData(0.5)
     X_under, y_under = under.values()
     over = OverSamplerData(0.5)
     X_over, y_over = over.values()
     under_over = UnderOverSamplerData(0.1, 0.5)
     X_under_over, y_under_over = under_over.values()
-    # print("***** RIDGE REGRESSION UNDER *****")
+
+    # print("***** LASSO UNDER *****")
     # print("Tolerance 0.1")
-    # model = TestModelRidgeRegression2(0.1, X_under, y_under)
-    # create_submission(model, 1, 3, False)
-    print("***** LASSO UNDER *****")
-    print("Tolerance 0.1")
-    model = TestModelLasso2rf(0.1, X_under, y_under)
-    create_submission(model, 1, 4, False)
-    # print("***** RIDGE REGRESSION OVER *****")
+    # model = TestModelLasso2rf(0.1, X_under, y_under)
+    # create_submission(model, 1, 4, False)
+    # print("***** LASSO OVER *****")
     # print("Tolerance 0.1")
-    # model = TestModelRidgeRegression2(0.1, X_over, y_over)
-    # create_submission(model, 1, 3, False)
-    print("***** LASSO OVER *****")
-    print("Tolerance 0.1")
-    model = TestModelLasso2rf(0.1, X_over, y_over)
-    create_submission(model, 1, 4, False)
-    # print("***** RIDGE REGRESSION UNDER OVER *****")
+    # model = TestModelLasso2rf(0.1, X_over, y_over)
+    # create_submission(model, 1, 4, False)
+    # print("***** LASSO UNDER OVER *****")
     # print("Tolerance 0.1")
-    # model = TestModelRidgeRegression2(0.1, X_under_over, y_under_over)
-    # create_submission(model, 1, 3, False)
-    print("***** LASSO UNDER OVER *****")
-    print("Tolerance 0.1")
-    model = TestModelLasso2rf(0.1, X_under_over, y_under_over)
-    create_submission(model, 1, 4, False)
-    # print("***** RIDGE REGRESSION UNDER *****")
+    # model = TestModelLasso2rf(0.1, X_under_over, y_under_over)
+    # create_submission(model, 1, 4, False)
+    # print("***** LASSO UNDER *****")
     # print("Tolerance 0.05")
-    # model = TestModelRidgeRegression2(0.05, X_under, y_under)
-    # create_submission(model, 1, 3, False)
-    print("***** LASSO UNDER *****")
-    print("Tolerance 0.05")
-    model = TestModelLasso2rf(0.05, X_under, y_under)
-    create_submission(model, 1, 4, False)
-    # print("***** RIDGE REGRESSION OVER *****")
+    # model = TestModelLasso2rf(0.05, X_under, y_under)
+    # create_submission(model, 1, 4, False)
+    # print("***** LASSO OVER *****")
     # print("Tolerance 0.05")
-    # model = TestModelRidgeRegression2(0.05, X_over, y_over)
-    # create_submission(model, 1, 3, False)
-    print("***** LASSO OVER *****")
-    print("Tolerance 0.05")
-    model = TestModelLasso2rf(0.05, X_over, y_over)
-    create_submission(model, 1, 4, False)
-    # print("***** RIDGE REGRESSION UNDER OVER *****")
+    # model = TestModelLasso2rf(0.05, X_over, y_over)
+    # create_submission(model, 1, 4, False)
+    # print("***** LASSO UNDER OVER *****")
     # print("Tolerance 0.05")
-    # model = TestModelRidgeRegression2(0.05, X_under_over, y_under_over)
-    # create_submission(model, 1, 3, False)
-    print("***** LASSO UNDER OVER *****")
-    print("Tolerance 0.05")
-    model = TestModelLasso2rf(0.05, X_under_over, y_under_over)
-    create_submission(model, 1, 4, False)
-    # print("***** RIDGE REGRESSION UNDER *****")
+    # model = TestModelLasso2rf(0.05, X_under_over, y_under_over)
+    # create_submission(model, 1, 4, False)
+    # print("***** LASSO UNDER *****")
     # print("Tolerance 0.15")
-    # model = TestModelRidgeRegression2(0.15, X_under, y_under)
-    # create_submission(model, 1, 3, False)
-    print("***** LASSO UNDER *****")
-    print("Tolerance 0.15")
-    model = TestModelLasso2rf(0.15, X_under, y_under)
-    create_submission(model, 1, 4, False)
-    # print("***** RIDGE REGRESSION OVER *****")
+    # model = TestModelLasso2rf(0.15, X_under, y_under)
+    # create_submission(model, 1, 4, False)
+    # print("***** LASSO OVER *****")
     # print("Tolerance 0.15")
-    # model = TestModelRidgeRegression2(0.15, X_over, y_over)
-    # create_submission(model, 1, 3, False)
-    print("***** LASSO OVER *****")
-    print("Tolerance 0.15")
-    model = TestModelLasso2rf(0.15, X_over, y_over)
-    create_submission(model, 1, 4, False)
-    # print("***** RIDGE REGRESSION UNDER OVER *****")
+    # model = TestModelLasso2rf(0.15, X_over, y_over)
+    # create_submission(model, 1, 4, False)
+    # print("***** LASSO UNDER OVER *****")
     # print("Tolerance 0.15")
-    # model = TestModelRidgeRegression2(0.15, X_under_over, y_under_over)
-    # create_submission(model, 1, 3, False)
-    print("***** LASSO UNDER OVER *****")
-    print("Tolerance 0.15")
-    model = TestModelLasso2rf(0.15, X_under_over, y_under_over)
-    create_submission(model, 1, 4, False)
+    # model = TestModelLasso2rf(0.15, X_under_over, y_under_over)
+    # create_submission(model, 1, 4, False)
 
 
 
-    over = OverSamplerData("minority")
-    X_over, y_over = over.values()
-    under_over = UnderOverSamplerData(0.4, 0.5)
-    X_under_over, y_under_over = under_over.values()
-    # print("***** RIDGE REGRESSION UNDER *****")
-    # print("Tolerance 0.1")
-    # model = TestModelRidgeRegression2(0.1, X_under, y_under)
-    # create_submission(model, 1, 3, False)
-    print("***** LASSO UNDER Minority *****")
-    print("Tolerance 0.1")
-    model = TestModelLasso2dt(0.1, X_under, y_under)
-    create_submission(model, 1, 4, False)
-    # print("***** RIDGE REGRESSION OVER *****")
-    # print("Tolerance 0.1")
-    # model = TestModelRidgeRegression2(0.1, X_over, y_over)
-    # create_submission(model, 1, 3, False)
-    print("***** LASSO OVER Minority *****")
-    print("Tolerance 0.1")
-    model = TestModelLasso2dt(0.1, X_over, y_over)
-    create_submission(model, 1, 4, False)
-    # print("***** RIDGE REGRESSION UNDER OVER *****")
-    # print("Tolerance 0.1")
-    # model = TestModelRidgeRegression2(0.1, X_under_over, y_under_over)
-    # create_submission(model, 1, 3, False)
-    print("***** LASSO UNDER OVER Minority *****")
-    print("Tolerance 0.1")
-    model = TestModelLasso2dt(0.1, X_under_over, y_under_over)
-    create_submission(model, 1, 4, False)
-    # print("***** RIDGE REGRESSION UNDER *****")
-    # print("Tolerance 0.05")
-    # model = TestModelRidgeRegression2(0.05, X_under, y_under)
-    # create_submission(model, 1, 3, False)
-    print("***** LASSO UNDER Minority *****")
-    print("Tolerance 0.05")
-    model = TestModelLasso2dt(0.05, X_under, y_under)
-    create_submission(model, 1, 4, False)
-    # print("***** RIDGE REGRESSION OVER *****")
-    # print("Tolerance 0.05")
-    # model = TestModelRidgeRegression2(0.05, X_over, y_over)
-    # create_submission(model, 1, 3, False)
-    print("***** LASSO OVER Minority *****")
-    print("Tolerance 0.05")
-    model = TestModelLasso2dt(0.05, X_over, y_over)
-    create_submission(model, 1, 4, False)
-    # print("***** RIDGE REGRESSION UNDER OVER *****")
-    # print("Tolerance 0.05")
-    # model = TestModelRidgeRegression2(0.05, X_under_over, y_under_over)
-    create_submission(model, 1, 3, False)
-    print("***** LASSO UNDER OVER Minority *****")
-    print("Tolerance 0.05")
-    model = TestModelLasso2dt(0.05, X_under_over, y_under_over)
-    create_submission(model, 1, 4, False)
-    # print("***** RIDGE REGRESSION UNDER *****")
-    # print("Tolerance 0.15")
-    # model = TestModelRidgeRegression2(0.15, X_under, y_under)
-    # create_submission(model, 1, 3, False)
-    print("***** LASSO UNDER Minority *****")
-    print("Tolerance 0.15")
-    model = TestModelLasso2dt(0.15, X_under, y_under)
-    create_submission(model, 1, 4, False)
-    # print("***** RIDGE REGRESSION OVER *****")
-    # print("Tolerance 0.15")
-    # model = TestModelRidgeRegression2(0.15, X_over, y_over)
-    # create_submission(model, 1, 3, False)
-    print("***** LASSO OVER Minority *****")
-    print("Tolerance 0.15")
-    model = TestModelLasso2dt(0.15, X_over, y_over)
-    create_submission(model, 1, 4, False)
-    # print("***** RIDGE REGRESSION UNDER OVER *****")
-    # print("Tolerance 0.15")
-    # model = TestModelRidgeRegression2(0.15, X_under_over, y_under_over)
-    # create_submission(model, 1, 3, False)
-    print("***** LASSO UNDER OVER Minority *****")
-    print("Tolerance 0.15")
-    model = TestModelLasso2dt(0.15, X_under_over, y_under_over)
-    create_submission(model, 1, 4, False)
 
-
+# TODO try weighted tree regressor, try trees with smaller domain
