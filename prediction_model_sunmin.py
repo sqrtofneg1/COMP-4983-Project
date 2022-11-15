@@ -4,13 +4,10 @@ from create_submission_csv import create_submission
 from data_preprocessing import load
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 import sklearn.linear_model as lin_mod
 import prediction_model_sunmin_tensorflow as tensorflow_model
 import stat_functions as stats
-
-
-# TODO: Implement ridge and lasso
 
 
 categorical = ["feature3", "feature4", "feature5", "feature7", "feature9", "feature11",
@@ -257,6 +254,129 @@ class TestModelTFRidge:  # data normalization on all data
         return predictions_claim_amount
 
 
+class TestModelTFLasso:  # data normalization on all data
+
+    def __init__(self, tolerance=None):
+        self.tolerance = tolerance
+        self.claim_or_not_model = tensorflow_model.get_tensorflow_model_boolean()
+
+        claim_amount_data = pd.read_csv("datasets/trainingset_claim_amounts_only.csv")
+        claim_amount_features = claim_amount_data.drop("ClaimAmount", axis=1, inplace=False)
+        claim_amount_features = StandardScaler().fit_transform(claim_amount_features)
+        claim_amount_labels = claim_amount_data.loc[:, "ClaimAmount"]
+        lambdas_lasso = [10 ** (x * .25) for x in (range(-8, 14))]
+        lasso_results = [kfoldCV_lasso(claim_amount_features, claim_amount_labels, 5, lambda_value) for lambda_value in
+                         lambdas_lasso]
+        lasso_cv_errors = [(lasso_results[i][1] + lasso_results[i][0]).tolist() for i in range(len(lasso_results))]
+        lowest_MAE_lasso = min(lasso_cv_errors)
+        selected_lambda = lambdas_lasso[lasso_cv_errors.index(lowest_MAE_lasso)]
+        print(f"Lasso Selected Lambda: {selected_lambda}")
+        self.claim_amount_model = lin_mod.Lasso(selected_lambda).fit(claim_amount_features, claim_amount_labels)
+
+        self.calculate_tolerance()
+
+        # For getting the stats for check_claim_amount_mae
+        self.predict(
+            pd.read_csv("datasets/trainingset_claim_amounts_only.csv").drop("ClaimAmount", axis=1, inplace=False))
+        # For getting the stats for check_claim_or_not
+        self.predict(pd.read_csv("datasets/trainingset.csv").drop("ClaimAmount", axis=1, inplace=False))
+
+    def calculate_tolerance(self):
+        features = pd.read_csv("datasets/trainingset.csv").drop("ClaimAmount", axis=1, inplace=False)
+        features = StandardScaler().fit_transform(features)
+        predictions_for_tolerance = self.claim_or_not_model.predict(features)[:, 1]
+        if self.tolerance is None:
+            sorted_arr = sorted(predictions_for_tolerance)
+            self.tolerance = np.percentile(sorted_arr, 95)
+
+    def predict(self, features):
+        features = StandardScaler().fit_transform(features)
+        predictions_claim_or_not_raw = self.claim_or_not_model.predict(features)[:, 1]
+        predictions_claim_or_not = [0] * len(features)
+        for i in range(len(features)):
+            if predictions_claim_or_not_raw[i] < self.tolerance:
+                predictions_claim_or_not[i] = 0
+            else:
+                predictions_claim_or_not[i] = 1
+        stats.check_claim_or_not(predictions_claim_or_not)  # only fires on trainingset
+
+        predictions_claim_amount_raw = self.claim_amount_model.predict(features)
+        predictions_claim_amount = [0] * len(features)
+        for i in range(len(features)):
+            if predictions_claim_or_not[i] == 0:
+                predictions_claim_amount[i] = 0
+            else:
+                predictions_claim_amount[i] = predictions_claim_amount_raw[i]
+        stats.check_claim_amount_mae(predictions_claim_amount)  # only fires on trainingset_claim_amounts_only
+        stats.check_overall_mae(predictions_claim_amount)
+        return predictions_claim_amount
+
+
+class TestModelGBCRidge:  # data normalization on all data
+
+    def __init__(self, tolerance=None):
+        self.tolerance = tolerance
+        boolean_data = pd.read_csv("datasets/trainingset_boolean_claim_amount.csv")
+        boolean_features = boolean_data.drop("ClaimAmount", axis=1, inplace=False)
+        boolean_features.loc[:, continuous] = StandardScaler().fit_transform(boolean_features.loc[:, continuous])
+        boolean_labels = boolean_data.loc[:, "ClaimAmount"]
+        self.claim_or_not_model = GradientBoostingClassifier(n_estimators=200).fit(boolean_features, boolean_labels)
+
+        claim_amount_data = pd.read_csv("datasets/trainingset_claim_amounts_only.csv")
+        claim_amount_features = claim_amount_data.drop("ClaimAmount", axis=1, inplace=False)
+        claim_amount_features = claim_amount_features.loc[:, continuous]
+        claim_amount_features = StandardScaler().fit_transform(claim_amount_features)
+        claim_amount_labels = claim_amount_data.loc[:, "ClaimAmount"]
+        lambdas_ridge = [10 ** x for x in (range(-1, 7))]
+        ridge_results = [kfoldCV_ridge(claim_amount_features, claim_amount_labels, 5, lambda_value) for lambda_value in
+                         lambdas_ridge]
+        ridge_cv_errors = [ridge_results[i][1].tolist() for i in range(len(ridge_results))]
+        lowest_MAE_ridge = min(ridge_cv_errors)
+        selected_lambda = lambdas_ridge[ridge_cv_errors.index(lowest_MAE_ridge)]
+        print(f"Ridge Selected Lambda: {selected_lambda}")
+        self.claim_amount_model = lin_mod.Ridge(selected_lambda).fit(claim_amount_features, claim_amount_labels)
+
+        self.calculate_tolerance()
+
+        # For getting the stats for check_claim_amount_mae
+        self.predict(
+            pd.read_csv("datasets/trainingset_claim_amounts_only.csv").drop("ClaimAmount", axis=1, inplace=False))
+        # For getting the stats for check_claim_or_not
+        self.predict(pd.read_csv("datasets/trainingset.csv").drop("ClaimAmount", axis=1, inplace=False))
+
+    def calculate_tolerance(self):
+        features = pd.read_csv("datasets/trainingset.csv").drop("ClaimAmount", axis=1, inplace=False)
+        features = StandardScaler().fit_transform(features)
+        predictions_for_tolerance = self.claim_or_not_model.predict_proba(features)[:, 1]
+        if self.tolerance is None:
+            sorted_arr = sorted(predictions_for_tolerance)
+            self.tolerance = np.percentile(sorted_arr, 95)
+        print(f"TOLERANCE: {self.tolerance}")
+
+    def predict(self, features):
+        features_cont = features.loc[:, continuous]
+        features_cont = StandardScaler().fit_transform(features_cont)
+        features = StandardScaler().fit_transform(features)
+        predictions_claim_or_not_raw = self.claim_or_not_model.predict_proba(features)[:, 1]
+        predictions_claim_or_not = [0] * len(features)
+        for i in range(len(features)):
+            if predictions_claim_or_not_raw[i] < self.tolerance:
+                predictions_claim_or_not[i] = 0
+            else:
+                predictions_claim_or_not[i] = 1
+        stats.check_claim_or_not(predictions_claim_or_not)  # only fires on trainingset
+
+        predictions_claim_amount_raw = self.claim_amount_model.predict(features_cont)
+        predictions_claim_amount = [0] * len(features)
+        for i in range(len(features)):
+            if predictions_claim_or_not[i] == 0:
+                predictions_claim_amount[i] = 0
+            else:
+                predictions_claim_amount[i] = predictions_claim_amount_raw[i]
+        stats.check_claim_amount_mae(predictions_claim_amount)  # only fires on trainingset_claim_amounts_only
+        stats.check_overall_mae(predictions_claim_amount)
+        return predictions_claim_amount
+
 # ADAPTED FROM LAB 5
 # k-fold cross-validation
 # Inputs:
@@ -360,13 +480,21 @@ def run():
     # tf_lin_reg_model = TestModelTFLinearRegression()
     # create_submission(tf_lin_reg_model, 1, 9, True)
 
-    print("***** TF THEN RIDGE *****")
-    tf_ridge_model = TestModelTFRidge()
-    create_submission(tf_ridge_model, 2, 1, True)
+    # print("***** TF THEN RIDGE *****")
+    # tf_ridge_model = TestModelTFRidge()
+    # create_submission(tf_ridge_model, 2, 1, True)
 
-    print("***** RANDOM FOREST THEN LASSO *****")
-    random_forest_lasso_model = TestModelRandomForestLasso()
-    create_submission(random_forest_lasso_model, 2, 2, True)
+    # print("***** RANDOM FOREST THEN LASSO *****")
+    # random_forest_lasso_model = TestModelRandomForestLasso()
+    # create_submission(random_forest_lasso_model, 2, 2, True)
+
+    # print("***** TF THEN LASSO *****")
+    # tf_lasso_model = TestModelTFLasso()
+    # create_submission(tf_lasso_model, 3, 1, True)
+
+    print("***** GBC THEN RIDGE WITH SUBSET FEATURES *****")
+    tf_lasso_model = TestModelGBCRidge()
+    create_submission(tf_lasso_model, 3, 2, True)
 
 
 if __name__ == "__main__":

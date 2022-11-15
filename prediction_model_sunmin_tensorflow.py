@@ -6,6 +6,7 @@ from tensorflow.keras import Input
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import SGD
+from sklearn.utils import class_weight
 
 
 def get_tensorflow_model_boolean():
@@ -16,7 +17,13 @@ def get_tensorflow_model_boolean():
 
     num_features = boolean_features.shape[1]
 
-    class_weights = {0: 1, 1: 19}
+    # class_weights = {0: 1, 1: 19}
+
+    class_weights = dict(zip(np.unique(boolean_labels),
+        class_weight.compute_class_weight(class_weight='balanced', classes=np.unique(boolean_labels), y=boolean_labels)))
+
+    sample_weights = np.ones(shape=len(boolean_labels))
+    sample_weights[boolean_labels == 1] = 10
 
     model = Sequential()
     model.add(Input(shape=(num_features,)))
@@ -29,6 +36,6 @@ def get_tensorflow_model_boolean():
     optimizer = SGD(learning_rate=0.1)
     model.compile(optimizer=optimizer, loss="sparse_categorical_crossentropy", metrics="accuracy")
 
-    model.fit(boolean_features, boolean_labels, epochs=10, verbose=1, class_weight=class_weights)
+    model.fit(boolean_features, boolean_labels, epochs=10, verbose=1, class_weight=class_weights, sample_weight=sample_weights)
 
     return model
