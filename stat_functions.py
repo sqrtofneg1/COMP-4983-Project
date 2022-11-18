@@ -17,11 +17,11 @@ def check_claim_or_not(preds):
     true_negatives = 0
     for i in range(len(preds)):
         if preds[i] == 0:
-            if boolean_answers[i] == 1:
+            if boolean_answers[i] != 0:
                 false_negatives += 1
             else:
                 true_negatives += 1
-        if preds[i] == 1:
+        if preds[i] != 0:
             if boolean_answers[i] == 0:
                 false_positives += 1
             else:

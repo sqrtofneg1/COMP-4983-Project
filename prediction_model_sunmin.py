@@ -5,6 +5,8 @@ from data_preprocessing import load
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from imblearn.over_sampling import RandomOverSampler, BorderlineSMOTE
+from imblearn.under_sampling import RandomUnderSampler
 import sklearn.linear_model as lin_mod
 import prediction_model_sunmin_tensorflow as tensorflow_model
 import stat_functions as stats
@@ -377,6 +379,181 @@ class TestModelGBCRidge:  # data normalization on all data
         stats.check_overall_mae(predictions_claim_amount)
         return predictions_claim_amount
 
+
+class TestModelRandomOverUnderSampleGBCLasso:  # data normalization on all data
+
+    def __init__(self, tolerance=None):
+        self.tolerance = tolerance
+
+        under_over = UnderOverSamplerData(0.2, 0.4)
+        X_under_over, y_under_over = under_over.values()
+        # X_under_over = StandardScaler().fit_transform(X_under_over)
+
+        self.claim_or_not_model = GradientBoostingClassifier(n_estimators=300).fit(X_under_over, y_under_over)
+
+        claim_amount_data = pd.read_csv("datasets/trainingset_claim_amounts_only.csv")
+        claim_amount_features = claim_amount_data.drop("ClaimAmount", axis=1, inplace=False)
+        # claim_amount_features = StandardScaler().fit_transform(claim_amount_features)
+        claim_amount_labels = claim_amount_data.loc[:, "ClaimAmount"]
+        lambdas_lasso = [10 ** (x * .25) for x in (range(-8, 14))]
+        lasso_results = [kfoldCV_lasso(claim_amount_features, claim_amount_labels, 5, lambda_value) for lambda_value in
+                         lambdas_lasso]
+        lasso_cv_errors = [(lasso_results[i][1] + lasso_results[i][0]).tolist() for i in range(len(lasso_results))]
+        lowest_MAE_lasso = min(lasso_cv_errors)
+        selected_lambda = lambdas_lasso[lasso_cv_errors.index(lowest_MAE_lasso)]
+        print(f"Lasso Selected Lambda: {selected_lambda}")
+        self.claim_amount_model = lin_mod.Lasso(selected_lambda).fit(claim_amount_features, claim_amount_labels)
+
+        self.calculate_tolerance()
+
+        # For getting the stats for check_claim_amount_mae
+        self.predict(
+            pd.read_csv("datasets/trainingset_claim_amounts_only.csv").drop("ClaimAmount", axis=1, inplace=False))
+        # For getting the stats for check_claim_or_not
+        self.predict(pd.read_csv("datasets/trainingset.csv").drop("ClaimAmount", axis=1, inplace=False))
+
+    def calculate_tolerance(self):
+        features = pd.read_csv("datasets/trainingset.csv").drop("ClaimAmount", axis=1, inplace=False)
+        # features = StandardScaler().fit_transform(features)
+        predictions_for_tolerance = self.claim_or_not_model.predict_proba(features)[:, 1]
+        if self.tolerance is None:
+            sorted_arr = sorted(predictions_for_tolerance)
+            self.tolerance = np.percentile(sorted_arr, 92)
+            print(f"Tolerance: {self.tolerance}")
+
+    def predict(self, features):
+        # features = StandardScaler().fit_transform(features)
+        predictions_claim_or_not_raw = self.claim_or_not_model.predict_proba(features)[:, 1]
+        predictions_claim_or_not = [0] * len(features)
+        for i in range(len(features)):
+            if predictions_claim_or_not_raw[i] < self.tolerance:
+                predictions_claim_or_not[i] = 0
+            else:
+                predictions_claim_or_not[i] = predictions_claim_or_not_raw[i]
+        stats.check_claim_or_not(predictions_claim_or_not)  # only fires on trainingset
+
+        predictions_claim_amount_raw = self.claim_amount_model.predict(features)
+        predictions_claim_amount = [0] * len(features)
+        for i in range(len(features)):
+            if predictions_claim_or_not[i] == 0:
+                predictions_claim_amount[i] = 0
+            else:
+                predictions_claim_amount[i] = predictions_claim_amount_raw[i] * (self.tolerance / 2 + predictions_claim_or_not_raw[i])
+        stats.check_claim_amount_mae(predictions_claim_amount)  # only fires on trainingset_claim_amounts_only
+        stats.check_overall_mae(predictions_claim_amount)
+        return predictions_claim_amount
+
+
+class TestModelBorderlineSMOTEGBCLasso:  # data normalization on all data
+
+    def __init__(self, tolerance=None):
+        self.tolerance = tolerance
+
+        boolean_data = pd.read_csv("datasets/trainingset_boolean_claim_amount.csv")
+        X = boolean_data.drop("ClaimAmount", axis=1, inplace=False)
+        y = boolean_data.loc[:, "ClaimAmount"]
+
+        smote = BorderlineSMOTE()
+        smote.fit(X, y)
+        new_X, new_Y = smote.fit_resample(X, y)
+        # new_X = StandardScaler().fit_transform(new_X)
+
+        self.claim_or_not_model = GradientBoostingClassifier(n_estimators=300).fit(new_X, new_Y)
+
+        claim_amount_data = pd.read_csv("datasets/trainingset_claim_amounts_only.csv")
+        claim_amount_features = claim_amount_data.drop("ClaimAmount", axis=1, inplace=False)
+        # claim_amount_features = StandardScaler().fit_transform(claim_amount_features)
+        claim_amount_labels = claim_amount_data.loc[:, "ClaimAmount"]
+        lambdas_lasso = [10 ** (x * .25) for x in (range(-8, 14))]
+        lasso_results = [kfoldCV_lasso(claim_amount_features, claim_amount_labels, 5, lambda_value) for lambda_value in
+                         lambdas_lasso]
+        lasso_cv_errors = [(lasso_results[i][1] + lasso_results[i][0]).tolist() for i in range(len(lasso_results))]
+        lowest_MAE_lasso = min(lasso_cv_errors)
+        selected_lambda = lambdas_lasso[lasso_cv_errors.index(lowest_MAE_lasso)]
+        print(f"Lasso Selected Lambda: {selected_lambda}")
+        self.claim_amount_model = lin_mod.Lasso(selected_lambda).fit(claim_amount_features, claim_amount_labels)
+
+        self.calculate_tolerance()
+
+        # For getting the stats for check_claim_amount_mae
+        self.predict(
+            pd.read_csv("datasets/trainingset_claim_amounts_only.csv").drop("ClaimAmount", axis=1, inplace=False))
+        # For getting the stats for check_claim_or_not
+        self.predict(pd.read_csv("datasets/trainingset.csv").drop("ClaimAmount", axis=1, inplace=False))
+
+    def calculate_tolerance(self):
+        features = pd.read_csv("datasets/trainingset.csv").drop("ClaimAmount", axis=1, inplace=False)
+        # features = StandardScaler().fit_transform(features)
+        predictions_for_tolerance = self.claim_or_not_model.predict_proba(features)[:, 1]
+        if self.tolerance is None:
+            sorted_arr = sorted(predictions_for_tolerance)
+            self.tolerance = np.percentile(sorted_arr, 92)
+            print(f"Tolerance: {self.tolerance}")
+
+    def predict(self, features):
+        # features = StandardScaler().fit_transform(features)
+        predictions_claim_or_not_raw = self.claim_or_not_model.predict_proba(features)[:, 1]
+        predictions_claim_or_not = [0] * len(features)
+        for i in range(len(features)):
+            if predictions_claim_or_not_raw[i] < self.tolerance:
+                predictions_claim_or_not[i] = 0
+            else:
+                predictions_claim_or_not[i] = predictions_claim_or_not_raw[i]
+        stats.check_claim_or_not(predictions_claim_or_not)  # only fires on trainingset
+
+        predictions_claim_amount_raw = self.claim_amount_model.predict(features)
+        predictions_claim_amount = [0] * len(features)
+        for i in range(len(features)):
+            if predictions_claim_or_not[i] == 0:
+                predictions_claim_amount[i] = 0
+            else:
+                predictions_claim_amount[i] = predictions_claim_amount_raw[i] * (self.tolerance / 2 + predictions_claim_or_not_raw[i])
+        stats.check_claim_amount_mae(predictions_claim_amount)  # only fires on trainingset_claim_amounts_only
+        stats.check_overall_mae(predictions_claim_amount)
+        return predictions_claim_amount
+
+
+class OverSamplerData:
+
+    def __init__(self, strat):
+        boolean_data = pd.read_csv("datasets/trainingset_boolean_claim_amount.csv")
+        X = boolean_data.drop("ClaimAmount", axis=1, inplace=False)
+        y = boolean_data.loc[:, "ClaimAmount"]
+        oversample = RandomOverSampler(sampling_strategy=strat)
+        self.X, self.y = oversample.fit_resample(X, y)
+
+    def values(self):
+        return self.X, self.y
+
+
+class UnderSamplerData:
+
+    def __init__(self, strat):
+        boolean_data = pd.read_csv("datasets/trainingset_boolean_claim_amount.csv")
+        X = boolean_data.drop("ClaimAmount", axis=1, inplace=False)
+        y = boolean_data.loc[:, "ClaimAmount"]
+        undersample = RandomUnderSampler(sampling_strategy=strat)
+        self.X, self.y = undersample.fit_resample(X, y)
+
+    def values(self):
+        return self.X, self.y
+
+
+class UnderOverSamplerData:
+
+    def __init__(self, strat_over, strat_under):
+        boolean_data = pd.read_csv("datasets/trainingset_boolean_claim_amount.csv")
+        X = boolean_data.drop("ClaimAmount", axis=1, inplace=False)
+        y = boolean_data.loc[:, "ClaimAmount"]
+        over = RandomOverSampler(sampling_strategy=strat_over)
+        under = RandomUnderSampler(sampling_strategy=strat_under)
+        X, y = over.fit_resample(X, y)
+        self.X, self.y = under.fit_resample(X, y)
+
+    def values(self):
+        return self.X, self.y
+
+
 # ADAPTED FROM LAB 5
 # k-fold cross-validation
 # Inputs:
@@ -492,9 +669,17 @@ def run():
     # tf_lasso_model = TestModelTFLasso()
     # create_submission(tf_lasso_model, 3, 1, True)
 
-    print("***** GBC THEN RIDGE WITH SUBSET FEATURES *****")
-    tf_lasso_model = TestModelGBCRidge()
-    create_submission(tf_lasso_model, 3, 2, True)
+    # print("***** GBC THEN RIDGE WITH SUBSET FEATURES *****")
+    # tf_lasso_model = TestModelGBCRidge()
+    # create_submission(tf_lasso_model, 3, 2, True)
+
+    print("***** OVER/UNDER GBC LASSO *****")
+    over_under_GBC_lasso_model = TestModelRandomOverUnderSampleGBCLasso()
+    create_submission(over_under_GBC_lasso_model, 4, 1, True)
+
+    print("***** BORDERLINE SMOTE GBC LASSO *****")
+    borderline_SMOTE_GBC_lasso_model = TestModelBorderlineSMOTEGBCLasso()
+    create_submission(borderline_SMOTE_GBC_lasso_model, 4, 2, True)
 
 
 if __name__ == "__main__":
