@@ -87,4 +87,5 @@ if __name__ == "__main__":
     with open("final_model.pkl", "rb") as inp:
         model = pickle.load(inp)
         create_submission(model, True, userinput)
-    create_submission(model, True, userinput)
+    # create_submission(model, True, userinput)
+    print("Submission Created at submissions/predictedclaimamount.csv\n")
