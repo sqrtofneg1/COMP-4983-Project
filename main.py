@@ -77,7 +77,7 @@ class UnderOverSamplerData:
 
 
 if __name__ == "__main__":
-    userinput = input("please enter filepath to competitionset.csv")
+    userinput = input("please enter filepath to competitionset.csv\n")
     under_over = UnderOverSamplerData()
     X_under_over, y_under_over = under_over.values()
     model = DecisionTree(0.1, X_under_over, y_under_over)

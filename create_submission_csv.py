@@ -11,9 +11,9 @@ def create_submission(model, raw_data, userinput):
      param raw_data: true if you want to use the raw dataset to test, false if you want to use one hot encoded data
     """
     if raw_data:
-        testdata = pd.read_csv("datasets/competitionset.csv")
+        testdata = pd.read_csv(userinput)
     else:
-        testdata = load("datasets/competitionset.csv")
+        testdata = load(userinput)
     predictions = model.predict(testdata)
     predictions_data_frame = pd.DataFrame(predictions, columns=["ClaimAmount"])
     predictions_data_frame.to_csv(f"submissions/predictedclaimamount.csv", index_label="rowIndex")
