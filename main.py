@@ -6,6 +6,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeRegressor
 from create_submission_csv import create_submission
 import stat_functions as stats
+import pickle
 
 boolean_answers = pd.read_csv("datasets/trainingset_boolean_claim_amount.csv").loc[:, "ClaimAmount"]
 num_expected_claim_amounts = 3335
@@ -78,7 +79,12 @@ class UnderOverSamplerData:
 
 if __name__ == "__main__":
     userinput = input("please enter filepath to competitionset.csv\n")
-    under_over = UnderOverSamplerData()
-    X_under_over, y_under_over = under_over.values()
-    model = DecisionTree(0.1, X_under_over, y_under_over)
+    # under_over = UnderOverSamplerData()
+    # X_under_over, y_under_over = under_over.values()
+    # model = DecisionTree(0.1, X_under_over, y_under_over)
+    # with open("final_model.pkl", "wb") as outp:
+    #     pickle.dump(model, outp)
+    with open("final_model.pkl", "rb") as inp:
+        model = pickle.load(inp)
+        create_submission(model, True, userinput)
     create_submission(model, True, userinput)
